@@ -1,0 +1,175 @@
+<workflow-app xmlns='uri:oozie:workflow:0.5' name='flight_analysis_spark'>
+    <start to="aver_taxi_time"/>
+
+    <action name='aver_taxi_time'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/aver_taxi_time"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Average_taxi_time</name>
+            <class>Average_taxi_time</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/average_taxi_time_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/input/*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/aver_taxi_time</arg>
+        </spark>
+        <ok to="max_three_aver_time" />
+        <error to="fail" />
+    </action>
+
+    <action name='max_three_aver_time'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_three_aver_time"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Max_three</name>
+            <class>Max_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/max_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/aver_taxi_time/part-*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_three_aver_time</arg>
+        </spark>
+        <ok to="min_three_aver_time" />
+        <error to="fail" />
+    </action>
+
+    <action name='min_three_aver_time'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_three_aver_time"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Min_three</name>
+            <class>Min_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/min_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/aver_taxi_time/part-*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_three_aver_time</arg>
+        </spark>
+        <ok to="cancellation_reason" />
+        <error to="fail" />
+    </action>
+
+    <action name='cancellation_reason'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/cancellation_reason"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Cancellation_reason</name>
+            <class>Cancellation_reason</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/cancellation_reason_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/input/</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/cancellation_reason</arg>
+        </spark>
+        <ok to="most_common_cancellation_rate" />
+        <error to="fail" />
+    </action>
+
+
+    <action name='most_common_cancellation_rate'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/most_common_cancellation_rate"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Most_common_cancellation_reason</name>
+            <class>Most_common_cancellation_reason</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/most_common_cancellation_reason_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/cancellation_reason/part-*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/most_common_cancellation_rate</arg>
+        </spark>
+        <ok to="on_schedule_rate" />
+        <error to="fail" />
+    </action>
+
+    <action name='on_schedule_rate'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/on_schedule_rate"/>
+            </prepare>
+            <master>${master}</master>
+            <name>On_schedule_rate</name>
+            <class>On_schedule_rate</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/on_schedule_rate_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/input/*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/on_schedule_rate</arg>
+        </spark>
+        <ok to="max_three_on_schedule_rate" />
+        <error to="fail" />
+    </action>
+
+    <action name='max_three_on_schedule_rate'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_three_on_schedule_rate"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Max_three</name>
+            <class>Max_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/max_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/on_schedule_rate/part-*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_three_on_schedule_rate</arg>
+        </spark>
+        <ok to="min_three_on_schedule_rate" />
+        <error to="fail" />
+    </action>
+
+    <action name='min_three_on_schedule_rate'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_three_on_schedule_rate"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Min_three</name>
+            <class>Min_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/min_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/on_schedule_rate/part-*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_three_on_schedule_rate</arg>
+        </spark>
+        <ok to="collect_results" />
+        <error to="fail" />
+    </action>
+
+    <action name='collect_results'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/collect_results"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Collect_results</name>
+            <class>Collect_results</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/collect_results_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/*/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/collect_results</arg>
+        </spark>
+        <ok to="end" />
+        <error to="fail" />
+    </action>
+
+
+    <kill name="fail">
+        <message>Workflow failed, error
+            message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name='end' />
+</workflow-app>
+

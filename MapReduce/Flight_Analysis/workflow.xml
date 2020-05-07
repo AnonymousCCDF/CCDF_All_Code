@@ -1,0 +1,581 @@
+<workflow-app xmlns="uri:oozie:workflow:0.2" name="flight_analysis">
+    <start to="aver_taxi_time"/>
+    <action name="aver_taxi_time">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/${outputDir1}"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/input/*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir1}</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Average_taxi_time_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Average_taxi_time_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.DoubleWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>1</value>
+                </property>                              
+            </configuration>
+        </map-reduce>
+        <ok to="max_three_aver_time"/>
+        <error to="fail"/>
+    </action>
+
+
+    <action name="max_three_aver_time">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/${outputDir2}"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir1}/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir2}</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_average_taxi_time_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_average_taxi_time_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.DoubleWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.DoubleWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>1</value>
+                </property>                              
+            </configuration>
+        </map-reduce>
+        <ok to="min_three_aver_time"/>
+        <error to="fail"/>
+    </action>
+
+
+    <action name="min_three_aver_time">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/${outputDir3}"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir1}/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir3}</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_average_taxi_time_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_average_taxi_time_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.DoubleWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.DoubleWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>1</value>
+                </property>                              
+            </configuration>
+        </map-reduce>
+        <ok to="cancellation_reason"/>
+        <error to="fail"/>
+    </action>
+
+
+
+    <action name="cancellation_reason">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/${outputDir4}"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/input/*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir4}</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Cancellation_reason_count_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Cancellation_reason_count_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>1</value>
+                </property>                              
+            </configuration>
+        </map-reduce>
+        <ok to="most_common_cancellation_rate"/>
+        <error to="fail"/>
+    </action>
+
+
+
+    <action name="most_common_cancellation_rate">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/${outputDir5}"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir4}/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir5}</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Most_common_cancellation_reason_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Most_common_cancellation_reason_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.NullWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>1</value>
+                </property>                              
+            </configuration>
+        </map-reduce>
+        <ok to="on_schedule_rate"/>
+        <error to="fail"/>
+    </action>
+
+    <action name="on_schedule_rate">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/${outputDir6}"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/input/*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir6}</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>On_schedule_rate_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>On_schedule_rate_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.DoubleWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>1</value>
+                </property>                              
+            </configuration>
+        </map-reduce>
+        <ok to="max_three_on_schedule_rate"/>
+        <error to="fail"/>
+    </action>
+
+    <action name="max_three_on_schedule_rate">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/${outputDir7}"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir6}/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir7}</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_on_schedule_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_on_schedule_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.DoubleWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.DoubleWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>1</value>
+                </property>                              
+            </configuration>
+        </map-reduce>
+        <ok to="min_three_on_schedule_rate"/>
+        <error to="fail"/>
+    </action>
+
+
+    <action name="min_three_on_schedule_rate">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/${outputDir8}"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir6}/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir8}</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_on_schedule_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_on_schedule_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.DoubleWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.DoubleWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>1</value>
+                </property>                              
+            </configuration>
+        </map-reduce>
+        <ok to="collect_results"/>
+        <error to="fail"/>
+    </action>
+
+    <action name="collect_results">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/${outputDir9}"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/*/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/${outputDir9}</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Collect_results_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Collect_results_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>1</value>
+                </property>                              
+            </configuration>
+        </map-reduce>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+
+    <kill name="fail">
+        <message>Map/Reduce failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>

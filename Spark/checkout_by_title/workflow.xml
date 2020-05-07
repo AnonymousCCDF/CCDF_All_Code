@@ -1,0 +1,433 @@
+<workflow-app xmlns='uri:oozie:workflow:0.5' name='Checkout_By_Title_SPARK'>
+    <start to='Preprocess' />
+
+    <action name='Preprocess'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_result"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Preprocess</name>
+            <class>Preprocess</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/preprocess_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/input/*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_result</arg>
+        </spark>
+        <ok to="forking" />
+        <error to="fail" />
+    </action>
+
+    <fork name="forking">
+        <path start="Book_Title_Count"/>
+        <path start="Checkout_Year_Count"/>
+        <path start="Checkout_Month_Count"/>
+        <path start="Creator_Count"/>
+        <path start="Material_Type_Count"/>
+        <path start="Subject_Count"/>
+    </fork>
+
+
+    <action name="Book_Title_Count">
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/book_title_count"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Book_title_count</name>
+            <class>Book_title_count</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/book_title_count_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_result/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/book_title_count</arg>
+        </spark>
+        <ok to="fork_book" />
+        <error to="fail" />
+    </action>
+
+    <fork name="fork_book">
+        <path start="max_three_book"/>
+        <path start="min_three_book"/>
+    </fork>
+
+
+    <action name='max_three_book'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_three_book"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Max_three</name>
+            <class>Max_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/max_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/book_title_count/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_three_book</arg>
+        </spark>
+        <ok to="join_book" />
+        <error to="fail" />
+    </action>
+
+    <action name='min_three_book'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_three_book"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Min_three</name>
+            <class>Min_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/min_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/book_title_count/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_three_book</arg>
+        </spark>
+        <ok to="join_book" />
+        <error to="fail" />
+    </action>
+
+    <join name="join_book" to="joining"/>
+
+
+    <action name='Checkout_Year_Count'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/checkout_year_count"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Checkout_year_count</name>
+            <class>Checkout_year_count</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/checkout_year_count_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_result/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/checkout_year_count</arg>
+        </spark>
+        <ok to="fork_checkout_year" />
+        <error to="fail"/>
+    </action>
+
+    <fork name="fork_checkout_year">
+        <path start="max_three_checkout_year"/>
+        <path start="min_three_checkout_year"/>
+    </fork>
+
+    <action name='max_three_checkout_year'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_three_checkout_year"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Max_three</name>
+            <class>Max_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/max_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/checkout_year_count/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_three_checkout_year</arg>
+        </spark>
+        <ok to="join_checkout_year" />
+        <error to="fail" />
+    </action>
+
+    <action name='min_three_checkout_year'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_three_checkout_year"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Min_three</name>
+            <class>Min_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/min_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/checkout_year_count/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_three_checkout_year</arg>
+        </spark>
+        <ok to="join_checkout_year" />
+        <error to="fail" />
+    </action>
+
+    <join name="join_checkout_year" to="joining"/>
+
+    <action name='Checkout_Month_Count'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/checkout_month_count"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Checkout_month_count</name>
+            <class>Checkout_month_count</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/checkout_month_count_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_result/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/checkout_month_count</arg>
+        </spark>
+        <ok to="fork_checkout_month" />
+        <error to="fail" />
+    </action>
+
+    <fork name="fork_checkout_month">
+        <path start="max_three_checkout_month"/>
+        <path start="min_three_checkout_month"/>
+    </fork>
+
+    <action name='max_three_checkout_month'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_three_checkout_month"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Max_three</name>
+            <class>Max_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/max_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/checkout_month_count/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_three_checkout_month</arg>
+        </spark>
+        <ok to="join_checkout_month" />
+        <error to="fail" />
+    </action>
+
+    <action name='min_three_checkout_month'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_three_checkout_month"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Min_three</name>
+            <class>Min_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/min_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/checkout_month_count/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_three_checkout_month</arg>
+        </spark>
+        <ok to="join_checkout_month" />
+        <error to="fail" />
+    </action>
+
+    <join name="join_checkout_month" to="joining"/>
+
+    <action name='Creator_Count'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/creator_count"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Creator_count</name>
+            <class>Creator_count</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/creator_count_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_result/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/creator_count</arg>
+        </spark>
+        <ok to="fork_creator" />
+        <error to="fail" />
+    </action>
+
+    <fork name="fork_creator">
+        <path start="max_three_creator"/>
+        <path start="min_three_creator"/>
+    </fork>
+
+    <action name='max_three_creator'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_three_creator"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Max_three</name>
+            <class>Max_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/max_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/creator_count/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_three_creator</arg>
+        </spark>
+        <ok to="join_creator" />
+        <error to="fail" />
+    </action>
+
+    <action name='min_three_creator'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_three_creator"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Min_three</name>
+            <class>Min_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/min_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/creator_count/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_three_creator</arg>
+        </spark>
+        <ok to="join_creator" />
+        <error to="fail" />
+    </action>
+
+    <join name="join_creator" to="joining"/>
+
+    <action name='Material_Type_Count'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/material_type_count"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Material_type_count</name>
+            <class>Material_type_count</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/material_type_count_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_result/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/material_type_count</arg>
+        </spark>
+        <ok to="fork_material_type" />
+        <error to="fail" />
+    </action>    
+
+    <fork name="fork_material_type">
+        <path start="max_material_type"/>
+        <path start="min_material_type"/>
+    </fork>
+
+    <action name='max_material_type'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_material_type"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Max_three</name>
+            <class>Max_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/max_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/material_type_count/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_material_type</arg>
+        </spark>
+        <ok to="join_material_type" />
+        <error to="fail" />
+    </action>
+
+    <action name='min_material_type'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_material_type"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Min_three</name>
+            <class>Min_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/min_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/material_type_count/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_material_type</arg>
+        </spark>
+        <ok to="join_material_type" />
+        <error to="fail" />
+    </action>
+
+
+    <join name="join_material_type" to="joining"/>
+
+
+    <action name='Subject_Count'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/subject_count123"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Subject_count</name>
+            <class>Subject_count</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/subject_count_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_result/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/subject_count123</arg>
+        </spark>
+        <ok to="fork_subject" />
+        <error to="fail" />
+    </action>
+
+
+    <fork name="fork_subject">
+        <path start="max_subject"/>
+        <path start="min_subject"/>
+    </fork>
+
+
+    <action name='max_subject'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_subject"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Max_three</name>
+            <class>Max_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/max_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/subject_count123/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/max_subject</arg>
+        </spark>
+        <ok to="join_subject" />
+        <error to="fail" />
+    </action>
+
+    <action name='min_subject'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_subject"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Min_three</name>
+            <class>Min_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/min_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/subject_count123/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/min_subject</arg>
+        </spark>
+        <ok to="join_subject" />
+        <error to="fail" />
+    </action>
+
+
+    <join name="join_subject" to="joining"/>
+
+    <join name="joining" to="collect_results"/>
+
+
+    <action name='collect_results'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/collect_results"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Collect_results</name>
+            <class>Collect_results</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/collect_results_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/*/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/collect_results</arg>
+        </spark>
+        <ok to="end" />
+        <error to="fail" />
+    </action>
+
+
+    <kill name="fail">
+        <message>Workflow failed, error
+            message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name='end' />
+</workflow-app>

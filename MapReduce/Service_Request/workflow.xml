@@ -1,0 +1,2600 @@
+<workflow-app xmlns="uri:oozie:workflow:0.2" name="service_request">
+    <start to="preprocess"/>
+
+    <action name="preprocess">
+            <map-reduce>
+                <job-tracker>${jobTracker}</job-tracker>
+                <name-node>${nameNode}</name-node>
+                <prepare>
+                    <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_output"/>
+                </prepare>
+                <configuration>
+                    <property>
+                        <name>mapreduce.input.fileinputformat.inputdir</name>
+                        <value>/user/${wf:user()}/${examplesRoot}/input/*</value>
+                    </property>
+                    <property>
+                        <name>mapreduce.output.fileoutputformat.outputdir</name>
+                        <value>/user/${wf:user()}/${examplesRoot}/preprocess_output</value>
+                    </property>
+
+                    <property>
+                        <name>mapreduce.job.map.class</name>
+                        <value>Preprocess_mapper</value>
+                    </property>
+                    <property>
+                        <name>mapreduce.job.reduce.class</name>
+                        <value>Direct_output_reducer</value>
+                    </property>
+
+                    <property>
+                        <name>mapreduce.map.output.key.class</name>
+                        <value>org.apache.hadoop.io.Text</value>
+                    </property>
+                    <property>
+                        <name>mapreduce.map.output.value.class</name>
+                        <value>org.apache.hadoop.io.Text</value>
+                    </property>
+
+
+                    <property>
+                        <name>mapreduce.job.output.key.class</name>
+                        <value>org.apache.hadoop.io.Text</value>
+                    </property>
+                    <property>
+                        <name>mapreduce.job.output.value.class</name>
+                        <value>org.apache.hadoop.io.Text</value>
+                    </property>
+
+                    <property>
+                        <name>mapred.mapper.new-api</name>
+                        <value>true</value>
+                    </property>
+                    <property>
+                        <name>mapred.reducer.new-api</name>
+                        <value>true</value>
+                    </property>
+                    <property>
+                        <name>mapreduce.job.reduces</name>
+                        <value>${reduce_num}</value>
+                    </property>
+                </configuration>
+            </map-reduce>
+            <ok to="forking"/>
+            <error to="fail"/>
+        </action>
+
+    <fork name="forking">
+        <path start="brooklyn_record_analysis"/>
+        <path start="bronx_record_analysis"/>
+        <path start="manhattan_record_analysis"/>
+        <path start="other_places_analysis"/>
+        <path start="Analysis_as_a_total_agency"/>
+        <path start="Analysis_as_a_total_city"/>
+        <path start="Analysis_as_a_total_complain"/>
+    </fork>
+
+
+    <action name="brooklyn_record_analysis">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/brooklyn_record"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/preprocess_output/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/brooklyn_record</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Find_all_Brooklyn_record_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Direct_output_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_brooklyn_analysis"/>
+        <error to="fail"/>
+    </action>
+
+    <fork name="fork_brooklyn_analysis">
+        <path start="brooklyn_agency_count"/>
+        <path start="brooklyn_complain_count"/>
+    </fork>
+
+    <action name="brooklyn_agency_count">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/brooklyn_agency_count_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/brooklyn_record/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/brooklyn_agency_count_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Agency_count_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Count_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_brooklyn_agency_count"/>
+        <error to="fail"/>
+    </action>
+
+    <fork name="fork_brooklyn_agency_count">
+        <path start="brooklyn_max_three_agency"/>
+        <path start="brooklyn_min_three_agency"/>
+    </fork>
+
+
+   <action name="brooklyn_max_three_agency">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/brooklyn_max_three_agency_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/brooklyn_agency_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/brooklyn_max_three_agency_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_brooklyn_agency"/>
+        <error to="fail"/>
+    </action>
+
+   <action name="brooklyn_min_three_agency">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/brooklyn_min_three_agency_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/brooklyn_agency_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/brooklyn_min_three_agency_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_brooklyn_agency"/>
+        <error to="fail"/>
+    </action>
+
+    <join name="join_brooklyn_agency" to="joining_brooklyn"/>
+
+
+    <action name="brooklyn_complain_count">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/brooklyn_complain_count_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/brooklyn_record/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/brooklyn_complain_count_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Complain_count_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Count_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_brooklyn_complain_count"/>
+        <error to="fail"/>
+    </action>
+
+
+    <fork name="fork_brooklyn_complain_count">
+        <path start="brooklyn_max_three_complain"/>
+        <path start="brooklyn_min_three_complain"/>
+    </fork>
+
+   <action name="brooklyn_max_three_complain">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/brooklyn_max_three_complain_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/brooklyn_complain_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/brooklyn_max_three_complain_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_brooklyn_complain"/>
+        <error to="fail"/>
+    </action>
+
+   <action name="brooklyn_min_three_complain">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/brooklyn_min_three_complain_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/brooklyn_complain_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/brooklyn_min_three_complain_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_brooklyn_complain"/>
+        <error to="fail"/>
+    </action>
+
+    <join name="join_brooklyn_complain" to="joining_brooklyn"/>
+
+    <join name="joining_brooklyn" to="joining"/>
+
+    <action name="bronx_record_analysis">
+            <map-reduce>
+                <job-tracker>${jobTracker}</job-tracker>
+                <name-node>${nameNode}</name-node>
+                <prepare>
+                    <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/bronx_record"/>
+                </prepare>
+                <configuration>
+                    <property>
+                        <name>mapreduce.input.fileinputformat.inputdir</name>
+                        <value>/user/${wf:user()}/${examplesRoot}/preprocess_output/part-r-*</value>
+                    </property>
+                    <property>
+                        <name>mapreduce.output.fileoutputformat.outputdir</name>
+                        <value>/user/${wf:user()}/${examplesRoot}/bronx_record</value>
+                    </property>
+
+                    <property>
+                        <name>mapreduce.job.map.class</name>
+                        <value>Find_all_Bronx_record_mapper</value>
+                    </property>
+                    <property>
+                        <name>mapreduce.job.reduce.class</name>
+                        <value>Direct_output_reducer</value>
+                    </property>
+
+                    <property>
+                        <name>mapreduce.map.output.key.class</name>
+                        <value>org.apache.hadoop.io.Text</value>
+                    </property>
+                    <property>
+                        <name>mapreduce.map.output.value.class</name>
+                        <value>org.apache.hadoop.io.Text</value>
+                    </property>
+                    <property>
+                        <name>mapreduce.job.output.key.class</name>
+                        <value>org.apache.hadoop.io.Text</value>
+                    </property>
+                    <property>
+                        <name>mapreduce.job.output.value.class</name>
+                        <value>org.apache.hadoop.io.Text</value>
+                    </property>
+
+                    <property>
+                        <name>mapred.mapper.new-api</name>
+                        <value>true</value>
+                    </property>
+                    <property>
+                        <name>mapred.reducer.new-api</name>
+                        <value>true</value>
+                    </property>
+                    <property>
+                        <name>mapreduce.job.reduces</name>
+                        <value>${reduce_num}</value>
+                    </property>
+                </configuration>
+            </map-reduce>
+            <ok to="fork_bronx_analysis"/>
+            <error to="fail"/>
+        </action>
+
+    <fork name="fork_bronx_analysis">
+        <path start="bronx_agency_count"/>
+        <path start="bronx_complain_count"/>
+    </fork>
+
+    <action name="bronx_agency_count">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/bronx_agency_count_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/bronx_record/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/bronx_agency_count_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Agency_count_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Count_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_bronx_agency_count"/>
+        <error to="fail"/>
+    </action>
+
+    <fork name="fork_bronx_agency_count">
+        <path start="bronx_max_three_agency"/>
+        <path start="bronx_min_three_agency"/>
+    </fork>
+
+
+   <action name="bronx_max_three_agency">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/bronx_max_three_agency_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/bronx_agency_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/bronx_max_three_agency_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_bronx_agency"/>
+        <error to="fail"/>
+    </action>
+
+   <action name="bronx_min_three_agency">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/bronx_min_three_agency_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/bronx_agency_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/bronx_min_three_agency_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_bronx_agency"/>
+        <error to="fail"/>
+    </action>
+
+    <join name="join_bronx_agency" to="joining_bronx"/>
+
+
+    <action name="bronx_complain_count">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/bronx_complain_count_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/bronx_record/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/bronx_complain_count_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Complain_count_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Count_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_bronx_complain_count"/>
+        <error to="fail"/>
+    </action>
+
+
+    <fork name="fork_bronx_complain_count">
+        <path start="bronx_max_three_complain"/>
+        <path start="bronx_min_three_complain"/>
+    </fork>
+
+   <action name="bronx_max_three_complain">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/bronx_max_three_complain_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/bronx_complain_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/bronx_max_three_complain_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_bronx_complain"/>
+        <error to="fail"/>
+    </action>
+
+   <action name="bronx_min_three_complain">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/bronx_min_three_complain_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/bronx_complain_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/bronx_min_three_complain_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_bronx_complain"/>
+        <error to="fail"/>
+    </action>
+
+    <join name="join_bronx_complain" to="joining_bronx"/>
+
+    <join name="joining_bronx" to="joining"/>
+
+    <action name="manhattan_record_analysis">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/manhattan_record"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/preprocess_output/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/manhattan_record</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Find_all_Manhattan_record_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Direct_output_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_manhattan_analysis"/>
+        <error to="fail"/>
+    </action>
+
+    <fork name="fork_manhattan_analysis">
+        <path start="manhattan_agency_count"/>
+        <path start="manhattan_complain_count"/>
+    </fork>
+
+    <action name="manhattan_agency_count">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/manhattan_agency_count_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/manhattan_record/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/manhattan_agency_count_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Agency_count_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Count_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_manhattan_agency_count"/>
+        <error to="fail"/>
+    </action>
+
+    <fork name="fork_manhattan_agency_count">
+        <path start="manhattan_max_three_agency"/>
+        <path start="manhattan_min_three_agency"/>
+    </fork>
+
+
+   <action name="manhattan_max_three_agency">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/manhattan_max_three_agency_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/manhattan_agency_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/manhattan_max_three_agency_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_manhattan_agency"/>
+        <error to="fail"/>
+    </action>
+
+   <action name="manhattan_min_three_agency">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/manhattan_min_three_agency_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/manhattan_agency_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/manhattan_min_three_agency_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_manhattan_agency"/>
+        <error to="fail"/>
+    </action>
+
+    <join name="join_manhattan_agency" to="joining_manhattan"/>
+
+
+    <action name="manhattan_complain_count">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/manhattan_complain_count_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/manhattan_record/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/manhattan_complain_count_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Complain_count_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Count_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_manhattan_complain_count"/>
+        <error to="fail"/>
+    </action>
+
+
+    <fork name="fork_manhattan_complain_count">
+        <path start="manhattan_max_three_complain"/>
+        <path start="manhattan_min_three_complain"/>
+    </fork>
+
+   <action name="manhattan_max_three_complain">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/manhattan_max_three_complain_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/manhattan_complain_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/manhattan_max_three_complain_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_manhattan_complain"/>
+        <error to="fail"/>
+    </action>
+
+   <action name="manhattan_min_three_complain">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/manhattan_min_three_complain_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/manhattan_complain_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/manhattan_min_three_complain_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_manhattan_complain"/>
+        <error to="fail"/>
+    </action>
+
+    <join name="join_manhattan_complain" to="joining_manhattan"/>
+
+    <join name="joining_manhattan" to="joining"/>
+
+
+    <action name="other_places_analysis">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/other_places_record"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/preprocess_output/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/other_places_record</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Find_all_other_record_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Direct_output_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_other_places_analysis"/>
+        <error to="fail"/>
+    </action>
+
+    <fork name="fork_other_places_analysis">
+        <path start="other_places_agency_count"/>
+        <path start="other_places_complain_count"/>
+    </fork>
+
+    <action name="other_places_agency_count">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/other_places_agency_count_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/other_places_record/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/other_places_agency_count_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Agency_count_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Count_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_other_places_agency_count"/>
+        <error to="fail"/>
+    </action>
+
+    <fork name="fork_other_places_agency_count">
+        <path start="other_places_max_three_agency"/>
+        <path start="other_places_min_three_agency"/>
+    </fork>
+
+
+   <action name="other_places_max_three_agency">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/other_places_max_three_agency_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/other_places_agency_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/other_places_max_three_agency_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_other_places_agency"/>
+        <error to="fail"/>
+    </action>
+
+   <action name="other_places_min_three_agency">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/other_places_min_three_agency_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/other_places_agency_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/other_places_min_three_agency_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_other_places_agency"/>
+        <error to="fail"/>
+    </action>
+
+    <join name="join_other_places_agency" to="joining_other_places"/>
+
+
+    <action name="other_places_complain_count">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/other_places_complain_count_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/other_places_record/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/other_places_complain_count_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Complain_count_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Count_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_other_places_complain_count"/>
+        <error to="fail"/>
+    </action>
+
+
+    <fork name="fork_other_places_complain_count">
+        <path start="other_places_max_three_complain"/>
+        <path start="other_places_min_three_complain"/>
+    </fork>
+
+   <action name="other_places_max_three_complain">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/other_places_max_three_complain_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/other_places_complain_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/other_places_max_three_complain_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_other_places_complain"/>
+        <error to="fail"/>
+    </action>
+
+   <action name="other_places_min_three_complain">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/other_places_min_three_complain_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/other_places_complain_count_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/other_places_min_three_complain_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_other_places_complain"/>
+        <error to="fail"/>
+    </action>
+
+    <join name="join_other_places_complain" to="joining_other_places"/>
+
+    <join name="joining_other_places" to="joining"/>
+
+
+    <action name="Analysis_as_a_total_agency">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/total_agency_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/preprocess_output/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/total_agency_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Agency_count_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Count_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_total_agency_count"/>
+        <error to="fail"/>
+    </action>
+
+    <fork name="fork_total_agency_count">
+        <path start="total_max_three_agency"/>
+        <path start="total_min_three_agency"/>
+    </fork>
+
+
+   <action name="total_max_three_agency">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/total_max_three_agency_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/total_agency_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/total_max_three_agency_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_total_agency"/>
+        <error to="fail"/>
+    </action>
+
+   <action name="total_min_three_agency">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/total_min_three_agency_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/total_agency_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/total_min_three_agency_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_total_agency"/>
+        <error to="fail"/>
+    </action>
+
+    <join name="join_total_agency" to="joining"/>
+
+
+    <action name="Analysis_as_a_total_city">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/total_city_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/preprocess_output/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/total_city_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>City_count_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Count_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_total_city_count"/>
+        <error to="fail"/>
+    </action>
+
+    <fork name="fork_total_city_count">
+        <path start="total_max_three_city"/>
+        <path start="total_min_three_city"/>
+    </fork>
+
+
+   <action name="total_max_three_city">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/total_max_three_city_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/total_city_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/total_max_three_city_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_total_city"/>
+        <error to="fail"/>
+    </action>
+
+   <action name="total_min_three_city">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/total_min_three_city_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/total_city_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/total_min_three_city_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_total_city"/>
+        <error to="fail"/>
+    </action>
+
+    <join name="join_total_city" to="joining"/>
+
+
+
+    <action name="Analysis_as_a_total_complain">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/total_complain_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/preprocess_output/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/total_complain_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Complain_count_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Count_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="fork_total_complain_count"/>
+        <error to="fail"/>
+    </action>
+
+    <fork name="fork_total_complain_count">
+        <path start="total_max_three_complain"/>
+        <path start="total_min_three_complain"/>
+    </fork>
+
+
+   <action name="total_max_three_complain">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/total_max_three_complain_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/total_complain_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/total_max_three_complain_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Max_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Max_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_total_complain"/>
+        <error to="fail"/>
+    </action>
+
+   <action name="total_min_three_complain">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/total_min_three_complain_result"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/total_complain_result/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/total_min_three_complain_result</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Min_three_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Min_three_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.IntWritable</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="join_total_complain"/>
+        <error to="fail"/>
+    </action>
+
+    <join name="join_total_complain" to="joining"/>
+
+
+
+
+
+
+    <join name="joining" to="collect_results"/>
+
+    <action name="collect_results">
+        <map-reduce>
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/collect_results"/>
+            </prepare>
+            <configuration>
+                <property>
+                    <name>mapreduce.input.fileinputformat.inputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/*/part-r-*</value>
+                </property>
+                <property>
+                    <name>mapreduce.output.fileoutputformat.outputdir</name>
+                    <value>/user/${wf:user()}/${examplesRoot}/output-data/collect_results</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.job.map.class</name>
+                    <value>Collect_results_mapper</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduce.class</name>
+                    <value>Collect_results_reducer</value>
+                </property>
+
+                <property>
+                    <name>mapreduce.map.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.map.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+
+                <property>
+                    <name>mapreduce.job.output.key.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.output.value.class</name>
+                    <value>org.apache.hadoop.io.Text</value>
+                </property>
+
+                <property>
+                    <name>mapred.mapper.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapred.reducer.new-api</name>
+                    <value>true</value>
+                </property>
+                <property>
+                    <name>mapreduce.job.reduces</name>
+                    <value>${reduce_num}</value>
+                </property>
+            </configuration>
+        </map-reduce>
+        <ok to="end"/>
+        <error to="fail"/>
+    </action>
+
+    <kill name="fail">
+        <message>Map/Reduce failed, error message[${wf:errorMessage(wf:lastErrorNode())}]</message>
+    </kill>
+    <end name="end"/>
+</workflow-app>

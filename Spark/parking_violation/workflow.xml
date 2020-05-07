@@ -1,0 +1,166 @@
+<workflow-app xmlns='uri:oozie:workflow:0.5' name='Parking_violation_spark'>
+    <start to='Preprocess' />
+
+    <action name='Preprocess'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_output"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Preprocess</name>
+            <class>Preprocess</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/preprocess_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/input/*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_output</arg>
+        </spark>
+        <ok to="forking" />
+        <error to="fail" />
+    </action>
+
+    <fork name="forking">
+        <path start="average_fine"/>
+        <path start="car_violations"/>
+        <path start="most_expensive_fine"/>
+        <path start="car_fine_count"/>
+        <path start="violation_count"/> 
+    </fork>
+
+    <action name='average_fine'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/average_fine"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Average_fine</name>
+            <class>Average_fine</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/average_fine_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_output/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/average_fine</arg>
+        </spark>
+        <ok to="joining" />
+        <error to="fail" />
+    </action>
+
+    <action name='car_violations'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/car_violations"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Car_count</name>
+            <class>Car_count</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/car_count_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_output/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/car_violations</arg>
+        </spark>
+        <ok to="car_has_most_violations" />
+        <error to="fail" />
+    </action>
+
+    <action name='car_has_most_violations'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/car_has_most_violations"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Max_three</name>
+            <class>Max_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/max_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/car_violations/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/car_has_most_violations</arg>
+        </spark>
+        <ok to="joining" />
+        <error to="fail" />
+    </action>    
+
+    <action name='most_expensive_fine'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/most_expensive_fine"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Most_expensive_fine</name>
+            <class>Most_expensive_fine</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/most_expensive_fine_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_output/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/most_expensive_fine</arg>
+        </spark>
+        <ok to="joining" />
+        <error to="fail" />
+    </action> 
+
+    <action name='car_fine_count'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/car_fine_count"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Plate_fine_sum</name>
+            <class>Plate_fine_sum</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/plate_fine_sum_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/preprocess_output/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/car_fine_count</arg>
+        </spark>
+        <ok to="cars_pay_most" />
+        <error to="fail" />
+    </action> 
+
+   <action name='cars_pay_most'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/cars_pay_most"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Max_three</name>
+            <class>Max_three</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/max_three_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/car_fine_count/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/cars_pay_most</arg>
+        </spark>
+        <ok to="joining" />
+        <error to="fail" />
+    </action>     
+
+   <join name="joining" to="collect_results"/>
+
+    <action name='collect_results'>
+        <spark xmlns="uri:oozie:spark-action:0.1">
+            <job-tracker>${jobTracker}</job-tracker>
+            <name-node>${nameNode}</name-node>
+            <prepare>
+                <delete path="${nameNode}/user/${wf:user()}/${examplesRoot}/collect_results"/>
+            </prepare>
+            <master>${master}</master>
+            <name>Collect_results</name>
+            <class>Collect_results</class>
+            <jar>${nameNode}/user/${wf:user()}/${examplesRoot}/apps/${workflow_name}/lib/collect_results_2.10-1.0.jar</jar>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/output-data/*/part*</arg>
+            <arg>${nameNode}/user/${wf:user()}/${examplesRoot}/collect_results</arg>
+        </spark>
+        <ok to="end" />
+        <error to="fail" />
+    </action>    
+
+
+
+    <kill name="fail">
+        <message>Workflow failed, error
+            message[${wf:errorMessage(wf:lastErrorNode())}]
+        </message>
+    </kill>
+    <end name='end' />
+</workflow-app>   
